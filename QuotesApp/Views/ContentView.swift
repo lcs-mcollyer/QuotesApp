@@ -2,7 +2,7 @@
 //  ContentView.swift
 //  DadJokes
 //
-//  Created by Russell Gordon on 2022-02-21.
+//  Created by Matt Collyer on 2022-02-21.
 //
 
 import SwiftUI
@@ -21,13 +21,13 @@ struct ContentView: View {
     // Square brackets used to define a list
     
     // This will let us know wether the current joke has been added to the list
-    @State var currentQuote: Bool = false
+    @State var currentQuoteAddedToFavourites: Bool = false
     
     // MARK: Computed properties
     var body: some View {
         VStack {
             
-            Text(currentQuote.quote)
+            Text($currentQuote.quote)
                 .font(.title)
               // shrink the text to at most half its original size to allow it to fit.
                 .minimumScaleFactor(0.5)
@@ -44,13 +44,13 @@ struct ContentView: View {
                 .foregroundColor(currentQuoteAddedToFavourites == true ? .red : .secondary)
                 .onTapGesture {
                   // only when the joke does not already exist, add it
-                    if currentJokeAddedToFavourites == false {
+                    if currentQuoteAddedToFavourites == false {
                         // Add the current joke to the list
-                        favourites.append(currentJoke) // append = add
+                        favourites.append(currentQuote) // append = add
                         // Same thing as manually adding to a list but the computer automatically adds it for us.
                         
                         // Keep track that the joke is now a favourite.
-                        currentJokeAddedToFavourites = true
+                        currentQuoteAddedToFavourites = true
                     }
                 }
             
@@ -88,8 +88,8 @@ struct ContentView: View {
             // Iterate (loop) over the list (array) of jokes
             // Make each joke accessible using the name "currentJoke"
             // id: \.self  <- that tells the list structures to indentify each joke using the text of the joke itself
-            List(favourites, id: \.self) { currentJoke in
-                Text(currentJoke.joke)
+            List(favourites, id: \.self) { currentQuote in
+                Text(currentQuote.quote)
                 
             }
             
@@ -102,7 +102,7 @@ struct ContentView: View {
             // To get a new joke.
             // By typing "await" we are acknowledging tha we know thus
             // Function may ber un at the saem time as other tasks in the app
-            await loadNewJoke()
+            await loadNewQuote()
             
             //DEBUG
             print("Have just attempted to load a new joke")
@@ -117,40 +117,36 @@ struct ContentView: View {
     // Means it may be run at hte saem time as other tasks.
     // This is the function definition (it is where the computer "learns" waht
     // It takes to load a new joke).
-    func loadNewJoke() async {
+    func loadNewQuote() async {
         
         // Assemble the URL that points to the endpoint
-        let url = URL(string: "https://icanhazdadjoke.com/")!
+        let url = URL(string: "http://forismatic.com/")!
         
         // Define the type of data we want from the endpoint
         // Configure the request to the web site
         var request = URLRequest(url: url)
         // Ask for JSON data
-        request.setValue("application/json",
+        request.setValue("application/JSON",
                          forHTTPHeaderField: "Accept")
         
         // Start a session to interact (talk with) the endpoint
         let urlSession = URLSession.shared
         
-        // Try to fetch a new joke
-        // It might not work, so we use a do-catch block
+        // It might not work so use a do-catch block
         do {
             
             // Get the raw data from the endpoint
             let (data, _) = try await urlSession.data(for: request)
             
             // Attempt to decode the raw data into a Swift structure
-            // Takes what is in "data" and tries to put it into "currentJoke"
+            // Takes what is in "data" and tries to put it into "currentQuote"
             //                                 DATA TYPE TO DECODE TO
             //                                         |
             //                                         V
-            currentJoke = try JSONDecoder().decode(DadJoke.self, from: data)
+            currentQuote = try JSONDecoder().decode(Quote.self, from: data)
             // catch is almost as if it fails this is what will happen. Like a return style code.
-           
-            // if we got here, a new joke has been set (line 140).
-            // so we must rest the flag to track wether that current joke is
-            // a favourite
-            currentJokeAddedToFavourites = false
+          
+            currentQuoteAddedToFavourites = false
              
         } catch {
             print("Could not retrieve or decode the JSON from endpoint.")
